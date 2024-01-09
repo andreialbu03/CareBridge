@@ -9,8 +9,42 @@
   <body>
     <h1>Upload Your Doctor's Note</h1>
     <form action="/upload" method="post" enctype="multipart/form-data">
-      <input type="file" name="file" accept="image/*" required />
+      <input
+        type="file"
+        name="file"
+        accept="image/*"
+        required
+        onchange="previewFile()"
+      />
+
+      <!-- Image preview container -->
+      <div id="imagePreviewContainer" style="display: none">
+        <h2>Preview:</h2>
+        <img id="imagePreview" alt="File Preview" style="max-width: 100%" />
+      </div>
+
       <button type="submit">Upload</button>
     </form>
+
+    <!-- JavaScript for file preview -->
+    <script>
+      function previewFile() {
+        var fileInput = document.querySelector('input[type="file"]');
+        var imagePreview = document.getElementById("imagePreview");
+        var imagePreviewContainer = document.getElementById(
+          "imagePreviewContainer"
+        );
+
+        // Display the selected image preview
+        if (fileInput.files && fileInput.files[0]) {
+          var reader = new FileReader();
+          reader.onload = function (e) {
+            imagePreview.src = e.target.result;
+            imagePreviewContainer.style.display = "block";
+          };
+          reader.readAsDataURL(fileInput.files[0]);
+        }
+      }
+    </script>
   </body>
 </html>

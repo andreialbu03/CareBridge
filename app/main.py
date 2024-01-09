@@ -19,8 +19,11 @@ async def read_item(request: Request):
 # Route to handle file uploads
 @app.post("/upload")
 async def create_upload_file(file: UploadFile = File(...)):
-    # Process the uploaded file here (add AI processing logic)
-    return {"filename": file.filename}
+    # Access information about the uploaded file
+    filename = file.filename
+    content_type = file.content_type
+    
+    return {"filename": filename, "content_type": content_type}
 
 if __name__ == "__main__":
     import uvicorn
