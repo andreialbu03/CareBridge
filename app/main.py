@@ -7,16 +7,21 @@ from botocore.exceptions import NoCredentialsError
 import logging
 import os
 from dotenv import load_dotenv
+from openai import OpenAI
 
 load_dotenv()
-# logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
-app = FastAPI()
-
+GPT_API_KEY = os.getenv("GPT_API_KEY")
 AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY")
 AWS_SECRET_KEY = os.getenv("AWS_SECRET_KEY")
 AWS_REGION = os.getenv("AWS_REGION")
 S3_BUCKET = os.getenv("S3_BUCKET")
+
+app = FastAPI()
+openai_client = OpenAI(
+    api_key=GPT_API_KEY
+)
 
 # Initialize AWS Textract client
 textract_client = boto3.client('textract', aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY, region_name=AWS_REGION)
@@ -39,7 +44,7 @@ async def create_upload_file(file: UploadFile = File(...)):
     s3_client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY, region_name=AWS_REGION)
     try:
         s3_client.upload_fileobj(file.file, S3_BUCKET, file.filename)
-        logging.debug(f"Successfully uploaded file to S3: {file.filename}")
+        logging.info(f"Successfully uploaded file to S3: {file.filename}")
     except NoCredentialsError:
         raise HTTPException(status_code=500, detail="AWS credentials not available")
     
@@ -48,7 +53,7 @@ async def create_upload_file(file: UploadFile = File(...)):
         DocumentLocation={'S3Object': {'Bucket': S3_BUCKET, 'Name': file.filename}}
     )
 
-    logging.debug(f"Textract Response: {response}")
+    logging.info(f"Textract Response: {response}")
 
     # Get the Textract job ID
     job_id = response['JobId']
@@ -63,12 +68,13 @@ async def get_result(request: Request, job_id: str):
     try:
         # Get the results from Textract
         response = textract_client.get_document_text_detection(JobId=job_id)
-        logging.debug("Textract Response: %s", response)
         
         # Check if the Textract job is complete
         job_status = response['JobStatus']
         if job_status != 'SUCCEEDED':
             raise HTTPException(status_code=500, detail=f"Textract job status: {job_status}")
+        
+        logging.info("Textract Response: %s", response['JobStatus'])
 
         # Extract and display text
         blocks = response['Blocks']
@@ -78,8 +84,50 @@ async def get_result(request: Request, job_id: str):
     except Exception as e:
         logging.error("Error processing Textract response: %s", str(e))
         raise HTTPException(status_code=500, detail="Error processing Textract response")
+    
 
-    return templates.TemplateResponse("result.html", {"request": request, "extracted_text": extracted_text})
+    #####
+    medical_entities = extract_medical_entities(extracted_text)
+
+    # Extract conditions, medications, anatomy, procedures, and other entities
+    conditions = [entity['Text'] for entity in medical_entities if entity['Type'] == 'MEDICAL_CONDITION']
+    medications = [entity['Text'] for entity in medical_entities if entity['Type'] == 'MEDICATION']
+    anatomy = [entity['Text'] for entity in medical_entities if entity['Type'] == 'ANATOMY']
+    procedures = [entity['Text'] for entity in medical_entities if entity['Type'] == 'TEST_TREATMENT_PROCEDURE']
+
+    # Combine extracted entities into a summary
+    summary = f"Conditions: {', '.join(conditions)}\nMedications: {', '.join(medications)}\nAnatomy: {', '.join(anatomy)}\nProcedures: {', '.join(procedures)}"
+
+    print(medical_entities)
+
+    # Generate user-friendly explanation using GPT-3
+    explanation = generate_explanation(extracted_text)
+
+
+    # return templates.TemplateResponse("result.html", {"request": request, "extracted_text": medical_entities})
+    return templates.TemplateResponse("result.html", {"request": request, "extracted_text": explanation})
+
+
+# Function to extract medical entities using Comprehend Medical
+def extract_medical_entities(text):
+    comprehend_medical = boto3.client('comprehendmedical', region_name=AWS_REGION, aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY)
+    response = comprehend_medical.detect_entities(Text=text)
+    entities = response['Entities']
+    logging.info(f"Comprehend Medical Response Successful")
+    return entities
+
+# Function to generate user-friendly explanations using GPT-3
+def generate_explanation(text):
+    # Customize this function based on how you want to use GPT-3
+    # For simplicity, this example sends a prompt to GPT-3
+    prompt = f"Explain the medical information: {text}"
+    response = openai_client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": f"Hi there, I am a patient and my doctor just gave me a note with this information: {prompt}. Can you explain what this means?"}],
+    )
+    explanation = response.choices[0].message.content
+    return explanation
+
 
 if __name__ == "__main__":
     import uvicorn
