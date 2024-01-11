@@ -4,3 +4,4 @@ jinja2
 python-multipart
 boto3
 python-dotenv
+openai
