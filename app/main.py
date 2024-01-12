@@ -8,6 +8,7 @@ import logging
 import os
 from dotenv import load_dotenv
 from openai import OpenAI
+import json
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -74,11 +75,24 @@ async def get_result(request: Request, job_id: str):
         if job_status != 'SUCCEEDED':
             raise HTTPException(status_code=500, detail=f"Textract job status: {job_status}")
         
-        logging.info("Textract Response: %s", response['JobStatus'])
+        logging.info(f"Textract Response: {response['JobStatus']}")
 
         # Extract and display text
         blocks = response['Blocks']
-        extracted_text = ''.join([block['Text'] for block in blocks if block['BlockType'] == 'LINE'])
+        # Save extracted text to a file
+        block_path = 'textract_blocks.json'
+        with open(block_path, 'w') as output_file2:
+            json.dump(blocks, output_file2, indent=2)
+
+        # extracted_text = ''.join([block['Text'] for block in blocks if block['BlockType'] == 'LINE'])
+        extracted_text = ''.join([block['Text'] if 'Text' in block and isinstance(block['Text'], str) else '' for block in blocks])
+        
+        # Save extracted text to a file
+        output_file_path = 'extracted_text.txt'
+        with open(output_file_path, 'w') as output_file:
+            output_file.write(extracted_text)
+
+
     except NoCredentialsError:
         raise HTTPException(status_code=500, detail="AWS credentials not available")
     except Exception as e:
@@ -87,34 +101,43 @@ async def get_result(request: Request, job_id: str):
     
 
     #####
-    medical_entities = extract_medical_entities(extracted_text)
+    # medical_entities = comprehend_medical(extracted_text)
 
-    # Extract conditions, medications, anatomy, procedures, and other entities
-    conditions = [entity['Text'] for entity in medical_entities if entity['Type'] == 'MEDICAL_CONDITION']
-    medications = [entity['Text'] for entity in medical_entities if entity['Type'] == 'MEDICATION']
-    anatomy = [entity['Text'] for entity in medical_entities if entity['Type'] == 'ANATOMY']
-    procedures = [entity['Text'] for entity in medical_entities if entity['Type'] == 'TEST_TREATMENT_PROCEDURE']
+    # # Extract conditions, medications, anatomy, procedures, and other entities
+    # conditions = [entity['Text'] for entity in medical_entities if entity['Type'] == 'MEDICAL_CONDITION']
+    # medications = [entity['Text'] for entity in medical_entities if entity['Type'] == 'MEDICATION']
+    # anatomy = [entity['Text'] for entity in medical_entities if entity['Type'] == 'ANATOMY']
+    # procedures = [entity['Text'] for entity in medical_entities if entity['Type'] == 'TEST_TREATMENT_PROCEDURE']
 
-    # Combine extracted entities into a summary
-    summary = f"Conditions: {', '.join(conditions)}\nMedications: {', '.join(medications)}\nAnatomy: {', '.join(anatomy)}\nProcedures: {', '.join(procedures)}"
-
-    print(medical_entities)
+    # # Combine extracted entities into a summary
+    # summary = f"Conditions: {', '.join(conditions)}\nMedications: {', '.join(medications)}\nAnatomy: {', '.join(anatomy)}\nProcedures: {', '.join(procedures)}"
+    # print(medical_entities)
 
     # Generate user-friendly explanation using GPT-3
-    explanation = generate_explanation(extracted_text)
+    # explanation = generate_explanation(extracted_text)
 
 
-    # return templates.TemplateResponse("result.html", {"request": request, "extracted_text": medical_entities})
-    return templates.TemplateResponse("result.html", {"request": request, "extracted_text": explanation})
+    return templates.TemplateResponse("result.html", {"request": request, "extracted_text": extracted_text})
+    # return templates.TemplateResponse("result.html", {"request": request, "extracted_text": explanation})
 
 
 # Function to extract medical entities using Comprehend Medical
-def extract_medical_entities(text):
+def comprehend_medical(text):
     comprehend_medical = boto3.client('comprehendmedical', region_name=AWS_REGION, aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY)
     response = comprehend_medical.detect_entities(Text=text)
-    entities = response['Entities']
+    medical_entities = response['Entities']
     logging.info(f"Comprehend Medical Response Successful")
-    return entities
+
+    # Specify the file path where you want to save the output
+    output_file_path = 'comprehend_output.json'
+
+    # Open the file in write mode and write the extracted medical entities
+    with open(output_file_path, 'w') as output_file:
+        json.dump(medical_entities, output_file, indent=2)
+    
+    logging.info(f"Comprehend Medical output saved to {output_file_path}")
+
+    return medical_entities
 
 # Function to generate user-friendly explanations using GPT-3
 def generate_explanation(text):
