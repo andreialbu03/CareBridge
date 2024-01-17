@@ -1,5 +1,5 @@
 from fastapi import FastAPI, File, UploadFile, Request, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import boto3
@@ -9,6 +9,8 @@ import os
 from dotenv import load_dotenv
 from openai import OpenAI
 import json
+from time import sleep
+import re
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -38,6 +40,12 @@ templates = Jinja2Templates(directory="templates")
 async def read_item(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+# Define a function to check the status of the Textract job
+def check_textract_status(job_id):
+    response = textract_client.get_document_text_detection(JobId=job_id)
+    logging.info(f"Textract Status: {response['JobStatus']}")
+    return response['JobStatus']
+
 # Route to handle file uploads
 @app.post("/upload")
 async def create_upload_file(file: UploadFile = File(...)):
@@ -62,9 +70,38 @@ async def create_upload_file(file: UploadFile = File(...)):
     # Construct the URL for the result page
     result_page_url = f"/result/{job_id}"
 
-    return {"filename": file.filename, "job_id": job_id, "result_page_url": result_page_url}
+    logging.info(f"Result page URL: {result_page_url}")
+
+    # Maximum number of polling retries
+    max_polling_retries = 20
+
+    # Initialize the polling retry count
+    polling_retry_count = 0
+
+    while polling_retry_count < max_polling_retries:
+        # Check the status of the Textract job
+        job_status = check_textract_status(job_id)
+
+        if job_status == 'SUCCEEDED':
+            # Textract job is complete, redirect to the result page
+            redirect_response = RedirectResponse(url=result_page_url)
+            return redirect_response
+        elif job_status == 'FAILED':
+            # Handle the case where the Textract job failed (optional)
+            return {"error": "Textract job failed"}
+        else:
+            # Textract job is still in progress, wait for a while and then poll again
+            polling_retry_count += 1
+            sleep(5)  # Wait for 5 seconds before polling again
+
+    # If all polling retries fail, you can handle the error or return a specific response
+    return {"error": "Failed to retrieve Textract results after multiple polling retries"}
+
+
+    # return RedirectResponse(url=result_page_url)
 
 @app.get("/result/{job_id}", response_class=HTMLResponse)
+@app.post("/result/{job_id}", response_class=HTMLResponse)
 async def get_result(request: Request, job_id: str):
     try:
         # Get the results from Textract
@@ -137,16 +174,24 @@ def comprehend_medical(text):
 
     return medical_entities
 
+
 # Function to generate user-friendly explanations using GPT-3
 def generate_explanation(text):
-    # Customize this function based on how you want to use GPT-3
-    # For simplicity, this example sends a prompt to GPT-3
-    prompt = f"Hi there, I am a patient and just had a doctor's visit. My doctor just gave me note with this information but i don't understand it. Below is the text that is on the note, can you try your best to explain to me what it says and also provide me with online resources regarding what it talks about? Ignore anything that does not make sense. I understand that medical information should always be discussed by a healthcare provider but I would like to just use this just for my own research before going to speak to one.\nNote:\n{text}"
+    prompt = (
+        "Hi there, I am a patient and just had a doctor's visit. My doctor just gave me a note with this information, but I don't understand it. Below is the text that is on the note, can you try your best to explain to me what it says in a way that I can easily understand and also provide me with online resources regarding what it talks about? Ignore anything that does not make sense.\n\n"
+        "Note:\n" + text
+    )
+    logging.info("Sending prompt to GPT-3")
     response = openai_client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}],
     )
     explanation = response.choices[0].message.content
+
+    output_path = 'gpt_response.txt'
+    with open(output_path, 'w') as output_file:
+        output_file.write(explanation)
+
     return explanation
 
 
