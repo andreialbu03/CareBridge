@@ -102,22 +102,20 @@ async def get_result(request: Request, job_id: str):
 
     #####
     # medical_entities = comprehend_medical(extracted_text)
-
     # # Extract conditions, medications, anatomy, procedures, and other entities
     # conditions = [entity['Text'] for entity in medical_entities if entity['Type'] == 'MEDICAL_CONDITION']
     # medications = [entity['Text'] for entity in medical_entities if entity['Type'] == 'MEDICATION']
     # anatomy = [entity['Text'] for entity in medical_entities if entity['Type'] == 'ANATOMY']
     # procedures = [entity['Text'] for entity in medical_entities if entity['Type'] == 'TEST_TREATMENT_PROCEDURE']
-
     # # Combine extracted entities into a summary
     # summary = f"Conditions: {', '.join(conditions)}\nMedications: {', '.join(medications)}\nAnatomy: {', '.join(anatomy)}\nProcedures: {', '.join(procedures)}"
     # print(medical_entities)
 
     # Generate user-friendly explanation using GPT-3
-    # explanation = generate_explanation(extracted_text)
+    explanation = generate_explanation(extracted_text)
 
 
-    return templates.TemplateResponse("result.html", {"request": request, "extracted_text": extracted_text})
+    return templates.TemplateResponse("result.html", {"request": request, "extracted_text": explanation})
     # return templates.TemplateResponse("result.html", {"request": request, "extracted_text": explanation})
 
 
@@ -143,10 +141,10 @@ def comprehend_medical(text):
 def generate_explanation(text):
     # Customize this function based on how you want to use GPT-3
     # For simplicity, this example sends a prompt to GPT-3
-    prompt = f"Explain the medical information: {text}"
+    prompt = f"Hi there, I am a patient and just had a doctor's visit. My doctor just gave me note with this information but i don't understand it. Below is the text that is on the note, can you try your best to explain to me what it says and also provide me with online resources regarding what it talks about? Ignore anything that does not make sense. I understand that medical information should always be discussed by a healthcare provider but I would like to just use this just for my own research before going to speak to one.\nNote:\n{text}"
     response = openai_client.chat.completions.create(
         model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": f"Hi there, I am a patient and my doctor just gave me a note with this information: {prompt}. Can you explain what this means?"}],
+        messages=[{"role": "user", "content": prompt}],
     )
     explanation = response.choices[0].message.content
     return explanation
