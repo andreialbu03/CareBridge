@@ -23,6 +23,11 @@
         <img id="imagePreview" alt="File Preview" style="max-width: 100%" />
       </div>
 
+      <div id="loader-container" style="display: none; text-align: center">
+        <span id="processing-text">Processing...</span>
+        <div id="loader" class="loader"></div>
+      </div>
+
       <button type="submit">Upload</button>
     </form>
 
@@ -45,6 +50,9 @@
           reader.readAsDataURL(fileInput.files[0]);
         }
       }
+      document.querySelector("form").addEventListener("submit", function () {
+        document.getElementById("loader-container").style.display = "block";
+      });
     </script>
   </body>
 </html>
