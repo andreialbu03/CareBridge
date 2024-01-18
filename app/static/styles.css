@@ -97,3 +97,13 @@ button {
     transform: rotate(360deg);
   }
 }
+
+pre {
+  white-space: pre-wrap; /* Wrap text */
+  word-wrap: break-word; /* Break long words */
+  overflow-wrap: break-word; /* Ensures overflow is wrapped */
+  background-color: #f4f4f4; /* Optional: for better visibility */
+  padding: 15px; /* Optional: for some spacing */
+  border: 1px solid #ddd; /* Optional: adds a border */
+  border-radius: 4px; /* Optional: rounds the corners */
+}
