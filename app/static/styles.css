@@ -6,6 +6,8 @@
   --clr-black: #000000;
   --clr-accent: #3549ff;
   --clr-accent-light: #5c6aff;
+  --clr-light: #fff;
+  --clr-dark: #2a2d34;
 
   --fw-reg: 400;
   --fw-med: 500;
@@ -114,11 +116,35 @@ button {
 }
 
 pre {
-  white-space: pre-wrap; /* Wrap text */
-  word-wrap: break-word; /* Break long words */
-  overflow-wrap: break-word; /* Ensures overflow is wrapped */
-  background-color: #f4f4f4; /* Optional: for better visibility */
-  padding: 15px; /* Optional: for some spacing */
-  border: 1px solid #ddd; /* Optional: adds a border */
-  border-radius: 4px; /* Optional: rounds the corners */
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  background-color: #f4f4f4;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.extracted-text {
+  margin-top: 20px;
+  text-align: left;
+  font-family: "Lexend", sans-serif;
+}
+
+a.button {
+  text-decoration: none;
+  display: inline-block;
+  padding: 0.75em 2em;
+  background: var(--clr-accent);
+  color: var(--clr-light);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: transform 0.3s ease-in-out;
+  font-weight: bold;
+}
+
+.button:hover {
+  transform: scale(1.1);
 }
