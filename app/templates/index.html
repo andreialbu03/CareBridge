@@ -16,7 +16,46 @@
     <title>CareBridge</title>
   </head>
   <body>
-    <h1>Upload Your Doctor's Note</h1>
+    <h1 class="top-left-title">CareBridge</h1>
+
+    <div class="intro">
+      <h2>Welcome to CareBridge</h2>
+      <p>
+        CareBridge is a web-based healthcare communication tool designed to help
+        you understand and interpret medical documents and notes from healthcare
+        providers.
+      </p>
+      <p>
+        With this tool, you can easily upload your doctor's notes or medical
+        documents, and it will extract the text from them. You can then receive
+        an explanation in plain English to help you understand the medical
+        information contained in the documents.
+      </p>
+    </div>
+
+    <h3>How to Use:</h3>
+    <div class="instructions">
+      <ol>
+        <li>Click the "Choose File" button below.</li>
+        <li>
+          Select the medical document or image containing the notes you want to
+          understand.
+        </li>
+        <li>Click "Upload" to initiate the process.</li>
+        <li>Wait for the tool to process the document.</li>
+        <li>
+          Once processing is complete, you'll receive an explanation of the
+          medical content.
+        </li>
+      </ol>
+      <p>
+        Please note that while this tool can provide helpful insights, it's
+        essential to consult with a healthcare professional for any medical
+        advice or decisions. Use the tool as a resource to enhance your
+        understanding of your healthcare information.
+      </p>
+    </div>
+
     <form action="/upload" method="post" enctype="multipart/form-data">
       <input
         type="file"
