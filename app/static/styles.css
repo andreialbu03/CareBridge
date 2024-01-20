@@ -34,7 +34,7 @@ div {
 body {
   line-height: 1.6;
   color: #333;
-  background-color: #f4f4f4;
+  background-color: #e8e8e8;
   padding: 20px;
   /* text-align: center; */
 }
@@ -176,4 +176,9 @@ a.button {
 
 .button:hover {
   transform: scale(1.1);
+}
+
+.logo-image img {
+  width: 200px;
+  height: auto;
 }
