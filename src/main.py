@@ -1,7 +1,7 @@
 from botocore.exceptions import NoCredentialsError
 from dotenv import load_dotenv
-
-# from .services.upload_aws import upload_file_to_s3
+from services.upload_aws import upload_file_to_s3
+from services.textract_service import start_textract_job, poll_textract_job_status
 from openai import OpenAI
 from time import sleep
 from fastapi import (
@@ -25,11 +25,9 @@ RedirectResponse = responses.RedirectResponse
 StaticFiles = staticfiles.StaticFiles
 Jinja2Templates = templating.Jinja2Templates
 
-
 # Load environment variables and initialize logging
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
-
 
 # Environment variables
 GPT_API_KEY = os.getenv("GPT_API_KEY")
@@ -38,11 +36,9 @@ AWS_SECRET_KEY = os.getenv("AWS_SECRET_KEY")
 AWS_REGION = os.getenv("AWS_REGION")
 S3_BUCKET = os.getenv("S3_BUCKET")
 
-
 # Initialize FastAPI app
 app = FastAPI()
 openai_client = OpenAI(api_key=GPT_API_KEY)
-
 
 # Initialize AWS Textract client
 textract_client = boto3.client(
@@ -52,17 +48,9 @@ textract_client = boto3.client(
     region_name=AWS_REGION,
 )
 
-
 # Serve static files (CSS, JS, etc.) and templates
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
-
-
-# Function to check the status of the Textract job
-def check_textract_status(job_id):
-    response = textract_client.get_document_text_detection(JobId=job_id)
-    logging.info(f"Textract Status: {response['JobStatus']}")
-    return response["JobStatus"]
 
 
 # Function to generate user-friendly explanations using GPT-3
@@ -91,62 +79,31 @@ async def read_item(request: Request):
 @app.post("/upload")
 async def create_upload_file(file: UploadFile = File(...)):
     # Upload the file to S3
-    s3_client = boto3.client(
-        "s3",
-        aws_access_key_id=AWS_ACCESS_KEY,
-        aws_secret_access_key=AWS_SECRET_KEY,
-        region_name=AWS_REGION,
+    success = upload_file_to_s3(
+        file, AWS_ACCESS_KEY, AWS_SECRET_KEY, AWS_REGION, S3_BUCKET
     )
-    try:
-        s3_client.upload_fileobj(file.file, S3_BUCKET, file.filename)
-        logging.info(f"Successfully uploaded file to S3: {file.filename}")
-    except NoCredentialsError:
-        raise HTTPException(status_code=500, detail="AWS credentials not available")
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to upload file to S3")
 
-    # success = upload_file_to_s3(
-    #     file, AWS_ACCESS_KEY, AWS_SECRET_KEY, AWS_REGION, S3_BUCKET
-    # )
-
-    # if not success:
-    #     raise HTTPException(status_code=500, detail="Failed to upload to S3")
-
-    # Use AWS Textract to extract text
-    response = textract_client.start_document_text_detection(
-        DocumentLocation={"S3Object": {"Bucket": S3_BUCKET, "Name": file.filename}}
-    )
-    logging.info(f"Textract Response: {response}")
-
-    # Get the Textract job ID
-    job_id = response["JobId"]
+    # Use AWS Textract to extract text from the file
+    job_id = start_textract_job(textract_client, S3_BUCKET, file.filename)
 
     # Construct the URL for the result page
     result_page_url = f"/result/{job_id}"
     logging.info(f"Result page URL: {result_page_url}")
 
-    # Maximum number of polling retries
-    max_polling_retries = 20
-    polling_retry_count = 0
-
-    while polling_retry_count < max_polling_retries:
-        # Check the status of the Textract job
-        job_status = check_textract_status(job_id)
-
-        if job_status == "SUCCEEDED":
-            # Textract job is complete, redirect to the result page
-            redirect_response = RedirectResponse(url=result_page_url)
-            return redirect_response
-        elif job_status == "FAILED":
-            # Handle the case where the Textract job failed
-            return {"error": "Textract job failed"}
-        else:
-            # Textract job is still in progress, wait for 5 sec and then poll again
-            polling_retry_count += 1
-            sleep(5)
-
-    # All polling retries fail
-    return {
-        "error": "Failed to retrieve Textract results after multiple polling retries"
-    }
+    # Poll Textract job status
+    job_status, redirect_url = poll_textract_job_status(
+        textract_client, job_id, result_page_url
+    )
+    if job_status == "SUCCEEDED":
+        return RedirectResponse(url=redirect_url)
+    elif job_status == "FAILED":
+        return {"error": "Textract job failed"}
+    else:
+        return {
+            "error": "Failed to retrieve Textract results after multiple polling retries"
+        }
 
 
 # Route to render the result page
