@@ -1,17 +1,35 @@
-from fastapi import FastAPI, File, UploadFile, Request, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-import boto3
 from botocore.exceptions import NoCredentialsError
-import logging
-import os
 from dotenv import load_dotenv
+
+# from .services.upload_aws import upload_file_to_s3
 from openai import OpenAI
 from time import sleep
+from fastapi import (
+    FastAPI,
+    File,
+    UploadFile,
+    Request,
+    HTTPException,
+    responses,
+    staticfiles,
+    templating,
+)
+import logging
+import boto3
+import os
 
+
+# Aliases for clarity
+HTMLResponse = responses.HTMLResponse
+RedirectResponse = responses.RedirectResponse
+StaticFiles = staticfiles.StaticFiles
+Jinja2Templates = templating.Jinja2Templates
+
+
+# Load environment variables and initialize logging
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
+
 
 # Environment variables
 GPT_API_KEY = os.getenv("GPT_API_KEY")
@@ -20,9 +38,11 @@ AWS_SECRET_KEY = os.getenv("AWS_SECRET_KEY")
 AWS_REGION = os.getenv("AWS_REGION")
 S3_BUCKET = os.getenv("S3_BUCKET")
 
+
 # Initialize FastAPI app
 app = FastAPI()
 openai_client = OpenAI(api_key=GPT_API_KEY)
+
 
 # Initialize AWS Textract client
 textract_client = boto3.client(
@@ -31,6 +51,7 @@ textract_client = boto3.client(
     aws_secret_access_key=AWS_SECRET_KEY,
     region_name=AWS_REGION,
 )
+
 
 # Serve static files (CSS, JS, etc.) and templates
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -81,6 +102,13 @@ async def create_upload_file(file: UploadFile = File(...)):
         logging.info(f"Successfully uploaded file to S3: {file.filename}")
     except NoCredentialsError:
         raise HTTPException(status_code=500, detail="AWS credentials not available")
+
+    # success = upload_file_to_s3(
+    #     file, AWS_ACCESS_KEY, AWS_SECRET_KEY, AWS_REGION, S3_BUCKET
+    # )
+
+    # if not success:
+    #     raise HTTPException(status_code=500, detail="Failed to upload to S3")
 
     # Use AWS Textract to extract text
     response = textract_client.start_document_text_detection(
@@ -168,5 +196,5 @@ async def get_result(request: Request, job_id: str):
 if __name__ == "__main__":
     import uvicorn
 
-    # Run the FastAPI app using Uvicorn
+    # Run the FastAPI app using Uvicorn server
     uvicorn.run(app, host="127.0.0.1", port=8000)
