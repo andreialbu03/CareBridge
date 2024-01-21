@@ -2,6 +2,7 @@ from botocore.exceptions import NoCredentialsError
 from dotenv import load_dotenv
 from services.upload_aws import upload_file_to_s3
 from services.textract_service import start_textract_job, poll_textract_job_status
+from services.gpt_service import generate_gpt_explanation
 from openai import OpenAI
 from time import sleep
 from fastapi import (
@@ -54,19 +55,19 @@ templates = Jinja2Templates(directory="templates")
 
 
 # Function to generate user-friendly explanations using GPT-3
-def generate_explanation(text):
-    prompt = (
-        "Hi there, I am a patient and just had a doctor's visit. My doctor just gave me a note with this information, but I don't understand it. Below is the text that is on the note, can you try your best to explain to me what it says in a way that I can easily understand and also provide me with online resources regarding what it talks about? Ignore anything that does not make sense.\n\n"
-        "Note:\n" + text
-    )
-    logging.info("Sending prompt to GPT-3")
-    response = openai_client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": prompt}],
-    )
-    explanation = response.choices[0].message.content
+# def generate_explanation(text):
+#     prompt = (
+#         "Hi there, I am a patient and just had a doctor's visit. My doctor just gave me a note with this information, but I don't understand it. Below is the text that is on the note, can you try your best to explain to me what it says in a way that I can easily understand and also provide me with online resources regarding what it talks about? Ignore anything that does not make sense.\n\n"
+#         "Note:\n" + text
+#     )
+#     logging.info("Sending prompt to GPT-3")
+#     response = openai_client.chat.completions.create(
+#         model="gpt-3.5-turbo",
+#         messages=[{"role": "user", "content": prompt}],
+#     )
+#     explanation = response.choices[0].message.content
 
-    return explanation
+#     return explanation
 
 
 # Route to render the homepage
@@ -122,9 +123,8 @@ async def get_result(request: Request, job_id: str):
             )
         logging.info(f"Textract Response: {response['JobStatus']}")
 
-        # Extract and display text
+        # Extract the text from the response
         blocks = response["Blocks"]
-
         extracted_text = "".join(
             [
                 block["Text"]
@@ -133,7 +133,6 @@ async def get_result(request: Request, job_id: str):
                 for block in blocks
             ]
         )
-
     except NoCredentialsError:
         raise HTTPException(status_code=500, detail="AWS credentials not available")
     except Exception as e:
@@ -143,7 +142,7 @@ async def get_result(request: Request, job_id: str):
         )
 
     # Generate user-friendly explanation using GPT-3
-    explanation = generate_explanation(extracted_text)
+    explanation = generate_gpt_explanation(openai_client, extracted_text)
 
     return templates.TemplateResponse(
         "result.html", {"request": request, "extracted_text": explanation}
