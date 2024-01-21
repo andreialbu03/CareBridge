@@ -39,16 +39,39 @@ body {
   /* text-align: center; */
 }
 
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0;
+}
+
+.logo-image {
+  position: absolute; /* Make logo position absolute */
+  left: 20px; /* Adjust as needed */
+  margin-top: 0;
+}
+
+.title-container {
+  width: 100%; /* Take full width of the header */
+  text-align: center;
+  margin-top: 10;
+  margin-bottom: 50px;
+}
+
 h1 {
   color: var(--clr-accent);
   /* font-size: var(--fs-h1); */
   margin-bottom: 20px;
+  font-size: var(--fs-h1);
+
+  margin: 0;
 }
 
 h2 {
   color: var(--clr-accent);
   font-size: var(--fs-h2);
-  margin-top: 30px;
+  /* margin-top: 30px; */
   margin-bottom: 10px;
 }
 
@@ -100,7 +123,7 @@ button {
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.3s;
-  font-size: 13px;
+  font-size: 20px;
 }
 
 button:hover {
@@ -109,7 +132,11 @@ button:hover {
 
 /* Image preview container */
 #imagePreviewContainer {
-  margin-top: 20px;
+  margin-top: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
 }
 
 #imagePreview {
@@ -179,6 +206,10 @@ a.button {
 }
 
 .logo-image img {
-  width: 200px;
+  width: 150px;
   height: auto;
+}
+
+.back-home {
+  text-align: center;
 }

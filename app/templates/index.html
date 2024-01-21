@@ -16,16 +16,18 @@
     <title>CareBridge</title>
   </head>
   <body>
-    <div class="logo-image">
-      <a href="/">
-        <img src="../static/logo.png" alt="Logo" />
-      </a>
+    <div class="header">
+      <div class="logo-image">
+        <a href="/">
+          <img src="../static/logo.png" alt="Logo" />
+        </a>
+      </div>
+      <div class="title-container">
+        <h1>Welcome to CareBridge</h1>
+      </div>
     </div>
 
-    <!-- <h1 class="top-left-title">CareBridge</h1> -->
-
     <div class="intro">
-      <h2>Welcome to CareBridge</h2>
       <p>
         CareBridge is a web-based healthcare communication tool designed to help
         you understand and interpret medical documents and notes from healthcare
@@ -99,7 +101,7 @@
           var reader = new FileReader();
           reader.onload = function (e) {
             imagePreview.src = e.target.result;
-            imagePreviewContainer.style.display = "block";
+            imagePreviewContainer.style.display = "flex";
           };
           reader.readAsDataURL(fileInput.files[0]);
         }

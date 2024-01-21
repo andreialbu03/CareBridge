@@ -4,11 +4,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Include external font styles from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;900&display=swap"
+      rel="stylesheet"
+    />
+
     <link rel="stylesheet" type="text/css" href="../static/styles.css" />
     <title>Text Extraction Result</title>
   </head>
   <body>
-    <h1>Text Extraction Result</h1>
+    <div class="header">
+      <div class="logo-image">
+        <a href="/">
+          <img src="../static/logo.png" alt="Logo" />
+        </a>
+      </div>
+      <div class="title-container">
+        <h1>CareBridge</h1>
+      </div>
+    </div>
 
     <!-- Display extracted text -->
     <div>
@@ -17,8 +35,31 @@
     </div>
 
     <!-- Link back to homepage or other relevant pages -->
-    <div>
-      <a href="/" class="button">Back to Homepage</a>
+    <div class="back-home">
+      <!-- <a href="/" class="button">Back to Homepage</a> -->
+      <button onclick="goBack()" id="back-button">Back to Homepage</button>
     </div>
+
+    <script>
+      // Create links out of any URLs in extracted text
+      function createLinks(text) {
+        const urlRegex =
+          /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|])/gi;
+        return text.replace(urlRegex, function (url) {
+          return '<a href="' + url + '" target="_blank">' + url + "</a>";
+        });
+      }
+
+      function goBack() {
+        window.location.href = "/";
+      }
+
+      window.onload = function () {
+        var preElements = document.getElementsByClassName("extracted-text");
+        for (var i = 0; i < preElements.length; i++) {
+          preElements[i].innerHTML = createLinks(preElements[i].innerText);
+        }
+      };
+    </script>
   </body>
 </html>
