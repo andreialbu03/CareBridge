@@ -31,7 +31,7 @@ def poll_textract_job_status(
             polling_retry_count += 1
 
             # Delay between retries
-            sleep(5)
+            sleep(3)
     return "TIMEOUT", None
 
 
