@@ -60,6 +60,11 @@ async def read_item(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
+@app.get("/test", tags=["Root"])
+async def read_root():
+    return {"status": "ok"}
+
+
 # Route to handle file uploads
 @app.post("/upload")
 async def create_upload_file(file: UploadFile = File(...)):
