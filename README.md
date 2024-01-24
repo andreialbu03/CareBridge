@@ -2,7 +2,7 @@
 
 Welcome to **_CareBridge_**, your web-based healthcare communication tool designed to help you understand and interpret medical documents and notes from healthcare providers.
 
-You can access **_CareBridge_** by clicking [this link](https://carebridgeapp.com)
+You can access **_CareBridge_** by clicking [this link](http://35.183.155.79:8000)
 
 ## Table of Contents
 
