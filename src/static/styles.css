@@ -1,7 +1,7 @@
 :root {
   font-family: "Lexend", sans-serif;
 
-  --clr-dark-grey: #212121;
+  --clr-dark-grey: #6d6d6d;
   --clr-light-grey: #ddd;
   --clr-black: #000000;
   --clr-accent: #3549ff;
@@ -211,5 +211,11 @@ a.button {
 }
 
 .back-home {
+  text-align: center;
+}
+
+.disclaimer {
+  font-size: 0.7rem;
+  color: var(--clr-dark-grey);
   text-align: center;
 }
