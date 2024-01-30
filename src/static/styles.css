@@ -47,13 +47,13 @@ body {
 }
 
 .logo-image {
-  position: absolute; /* Make logo position absolute */
-  left: 20px; /* Adjust as needed */
+  position: absolute;
+  left: 20px;
   margin-top: 0;
 }
 
 .title-container {
-  width: 100%; /* Take full width of the header */
+  width: 100%;
   text-align: center;
   margin-top: 10;
   margin-bottom: 50px;
@@ -208,6 +208,30 @@ a.button {
 .logo-image img {
   width: 150px;
   height: auto;
+}
+
+/* For screens smaller than 768px */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .logo-image {
+    position: relative;
+    left: 0;
+  }
+
+  .logo-image img {
+    width: 70px;
+    height: auto;
+  }
+
+  .title-container {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
 }
 
 .back-home {
