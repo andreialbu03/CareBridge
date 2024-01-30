@@ -42,21 +42,29 @@ body {
 .header {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   margin-top: 0;
+  padding: 20px;
 }
 
 .logo-image {
+  margin-right: 20px;
   position: absolute;
   left: 20px;
-  margin-top: 0;
+  top: 20px;
+}
+
+.logo-image img {
+  width: 150px;
+  height: auto;
 }
 
 .title-container {
   width: 100%;
   text-align: center;
-  margin-top: 10;
-  margin-bottom: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 h1 {
@@ -205,11 +213,6 @@ a.button {
   transform: scale(1.1);
 }
 
-.logo-image img {
-  width: 150px;
-  height: auto;
-}
-
 /* For screens smaller than 768px */
 @media (max-width: 768px) {
   .header {
@@ -220,6 +223,7 @@ a.button {
   .logo-image {
     position: relative;
     left: 0;
+    margin-top: 0;
   }
 
   .logo-image img {
