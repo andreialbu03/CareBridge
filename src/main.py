@@ -60,6 +60,7 @@ async def read_item(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
+# Route to test the API
 @app.get("/test", tags=["Root"])
 async def read_root():
     return {"status": "ok"}
@@ -123,8 +124,11 @@ async def get_result(request: Request, job_id: str):
             ]
         )
     except NoCredentialsError:
+        # If AWS credentials are not available, raise an HTTPException with a 500 status code
+        logging.error("AWS credentials not available")
         raise HTTPException(status_code=500, detail="AWS credentials not available")
     except Exception as e:
+        # If an error occurs during the process, log the error and raise an exception
         logging.error("Error processing Textract response: %s", str(e))
         raise HTTPException(
             status_code=500, detail="Error processing Textract response"
@@ -133,6 +137,7 @@ async def get_result(request: Request, job_id: str):
     # Generate user-friendly explanation using GPT-3
     explanation = generate_gpt_explanation(openai_client, extracted_text)
 
+    # Render the result page with the extracted text and generated explanation
     return templates.TemplateResponse(
         "result.html", {"request": request, "extracted_text": explanation}
     )
