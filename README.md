@@ -8,7 +8,7 @@ You can access **_CareBridge_** by clicking [this link](http://15.156.201.68:800
 
 - [Overview](#overview)
 - [Features](#features)
-- [Development](#development)
+- [Running Locally](#running-the-application-locally)
 - [Dependencies](#dependencies)
 
 ## Overview
