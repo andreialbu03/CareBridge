@@ -45,7 +45,7 @@ CareBridge uses the following packages:
 
 ### Local Installation and Setup
 
-To set up CareBridge locally, follow these steps:
+1. To set up CareBridge locally, follow these steps:
 
 ```bash
 # Clone the repository
@@ -60,9 +60,21 @@ source venv/bin/activate  # On Windows use 'venv\Scripts\activate'
 pip install -r requirements.txt
 ```
 
+2. Create a `.env` file in the project root directory.
+
+3. Makes sure the following environment variables are present in the `.env` file:
+
+```
+AWS_ACCESS_KEY=your_aws_access_key
+AWS_SECRET_KEY=your_aws_secret_key
+AWS_REGION=your_aws_region
+S3_BUCKET=your_s3_bucket_name
+GPT_API_KEY=your_gpt_api_key
+```
+
 ### Running the Application
 
-Run the application using UVicorn within the `src` directory:
+3. Run the application using UVicorn within the `src` directory:
 
 ```bash
 cd src
